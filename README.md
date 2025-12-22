@@ -10,31 +10,24 @@ Our goal is to reproduce the main results of the SIREN paper and extend them to 
 
 We will first aim to reproduce the architecture of the SIREN paper. This involves the following steps:
 
-- The network architecture creates an implicit representation of signals (audio, video, image) by learning a function  
-  \[
-  \Phi_{\theta}(x)
-  \]
+- The network architecture creates an implicit representation of signals (audio, video, image) by learning a function
+  $$\Phi_{\theta}(x)$$
   which minimizes a loss function computed using ground-truth data. The neural network is a fully connected multilayer perceptron (MLP) that uses sine functions as activation functions, with activations given by
-  \[
-  \phi_i(x) = \sin(W_i x + b_i).
-  \]
+  $$\phi_i(x) = \sin(W_i x + b_i).$$
 
   In the paper, the authors used a 5–6 layer MLP with hidden dimensions ranging from 256 to 1024. All hidden-layer activations were replaced with sine functions, and a linear output layer was used.
 
-- A critical component of training is the initialization scheme, which significantly improves convergence. The first layer is initialized uniformly at random and scaled by a frequency parameter \(\omega_0\). Subsequent layers are also initialized uniformly at random according to
-  \[
-  W_i \sim U\left(-\sqrt{\frac{6}{\text{fan}_{\text{in}}}}, \sqrt{\frac{6}{\text{fan}_{\text{in}}}}\right),
-  \]
+- A critical component of training is the initialization scheme, which significantly improves convergence. The first layer is initialized uniformly at random and scaled by a frequency parameter $\omega_0$. Subsequent layers are also initialized uniformly at random according to
+  $$W_i \sim U\left(-\sqrt{\frac{6}{\mathrm{fan}_{\mathrm{in}}}},\; \sqrt{\frac{6}{\mathrm{fan}_{\mathrm{in}}}}\right),$$
   which ensures stable gradient propagation when using periodic activations.
 
 - Training proceeds by sampling coordinates using Monte Carlo sampling at each iteration (pixel coordinates for images, and interior/boundary points for PDEs). This provides an unbiased approximation of the continuous loss function defined over the domain. Using automatic differentiation, one can also supervise derivatives of the network output, minimizing losses of the form
-  \[
-  L = \| \nabla \Phi(x) - \nabla f(x) \|^2.
-  \]
+  $$L = \left\|\nabla \Phi(x) - \nabla f(x)\right\|^2.$$
 
 - For PDEs, SIREN is trained by minimizing PDE residuals at interior and boundary points (similar to Physics-Informed Neural Networks, or PINNs), with the key difference being the use of periodic activation functions.
 
-We will implement all of the above in **PyTorch**, leveraging tools such as `autograd` for computing higher-order derivatives. Once a minimal working architecture is established, we will apply it to an image-fitting task and a PDE problem, benchmarking SIREN against standard ReLU- and Tanh-based MLPs.
+We will implement all of the above in PyTorch, leveraging tools such as `autograd` for computing higher-order derivatives. Once a minimal working architecture is established, we will apply it to an image-fitting task and a PDE problem, benchmarking SIREN against standard ReLU- and Tanh-based MLPs.
+
 
 ---
 
