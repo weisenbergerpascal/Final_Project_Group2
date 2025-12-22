@@ -1,59 +1,166 @@
-\section*{Background \& Motivation}
+Background & Motivation
 
-Implicit Neural Representations (INRs) use neural networks to represent continuous physical fields by mapping coordinates directly to quantities like intensity or potential. The SIREN model introduced sinusoidal activation functions, enabling smooth and accurate modeling of both signals and their derivatives \cite{sitzmann2020implicit}. This makes SIRENs especially suitable for solving and analyzing physical systems governed by partial differential equations (PDEs) \cite{sitzmann2020implicit}.
-\par \vspace{5mm}
+Implicit Neural Representations (INRs) use neural networks to represent continuous physical fields by mapping coordinates directly to quantities like intensity or potential. The SIREN model introduced sinusoidal activation functions, enabling smooth and accurate modeling of both signals and their derivatives 
+1
+1. This makes SIRENs especially suitable for solving and analyzing physical systems governed by partial differential equations (PDEs).
+
 Our goal is to reproduce the main results of the SIREN paper and extend them to other types of PDEs. We want to test whether the periodic activation and initialization scheme that worked well for Poisson and Helmholtz equations can also handle equations of different character, such as diffusion (parabolic) or quantum mechanical (Schrödinger-type) systems. The broader motivation is to explore how neural networks can act as continuous, differentiable solvers for physics problems.
 
-\section*{Methods}
+Methods
 
-We will first aim to reproduce the architecture of the paper. This involves the following sequence of steps:
+We will first aim to reproduce the architecture of the SIREN paper. This involves the following steps:
 
-\begin{itemize}
-    \item The network architecture creates an implicit representation of signals (audio, video, image) by creating a function $\Phi_{\theta}(x)$ which minimizes a loss function computed using the ground truth. This neural network is a fully connected perceptron that uses sine functions as their activation functions, with the activation results given by
+The network architecture creates an implicit representation of signals (audio, video, image) by learning a function
 
-    $$
-    \phi_i(x) = sin(W_i x + b_i)
-    $$
+Φ
+𝜃
+(
+𝑥
+)
+Φ
+θ
+	​
 
-    In the paper, the authors took an architecture of 5-6 layer MLP with hidden dimensions 256-1024. The activation functions were changed to sin everywhere with a linear output layer. 
+(x)
 
-    \item Critical for training was the initialization (which sped up convergence) of the layers, where the first layer was initialized uniformly randomly and then scaled by a frequency $\omega_0$. Other layers are initialized uniformly randomly as well with the form
+which minimizes a loss function computed using ground-truth data. The neural network is a fully connected multilayer perceptron (MLP) that uses sine functions as activation functions, with activations given by
 
-    \begin{equation}
-        W_i \sim U(-\sqrt{\dfrac{6}{{fan}_{in}}},\sqrt{\dfrac{6}{{fan}_{in}}})
-    \end{equation}
-    which ensures stable gradient propagation for periodic activation.
-    
-    \item Finally, the training proceeds by sampling coordinates via Monte Carlo sampling at every iteration (pixel coordinates for images and interior/boundary points for PDEs). This ensures unbiased approximation of the continuous loss-function defined on the domain. Using autodiff, one can also implement other re-constructions where the gradient $\nabla\Phi_{\theta}$ can be supervised to minimizes loss functions like
+𝜙
+𝑖
+(
+𝑥
+)
+=
+sin
+⁡
+(
+𝑊
+𝑖
+𝑥
++
+𝑏
+𝑖
+)
+.
+ϕ
+i
+	​
 
-    $$
-    L = \| \nabla \Phi(x) - \nabla f(x)\|^2
-    $$
+(x)=sin(W
+i
+	​
 
-    \item For PDEs, SIREN is trained by minimizing PDE residuals at interior/boundary points (same as in a PINN) with the exception of using periodic activation function.
-\end{itemize}
+x+b
+i
+	​
 
-We will implement all of the above in PyTorch, enabling us to use tools such as autograd for higher derivative computation. Once we get the minimal working architecture done, we will move on to implementing this for a image-fitting task and a PDE, benchmarking the effectiveness of SIREN against ReLU/Tanh MLPs. 
+).
 
+In the paper, the authors used a 5–6 layer MLP with hidden dimensions ranging from 256 to 1024. All hidden-layer activations were replaced with sine functions, and a linear output layer was used.
 
+A critical component of training is the initialization scheme, which significantly improves convergence. The first layer is initialized uniformly at random and scaled by a frequency parameter 
+𝜔
+0
+ω
+0
+	​
 
-% \section*{Dataset}
-% We will generate synthetic datasets by numerically solving target PDEs (e.g., Poisson, Helmholtz, heat, Schrödinger) on simple 1D–2D domains. From these, we’ll sample coordinate–value pairs and, when needed, derivative information to supervise the SIREN. For validation, we plan to reproduce image-fitting and wavefield experiments from the paper using publicly available data like CelebA and simulated wavefields.
+. Subsequent layers are also initialized uniformly at random according to
 
+𝑊
+𝑖
+∼
+𝑈
+(
+−
+6
+fan
+in
+,
+6
+fan
+in
+)
+,
+W
+i
+	​
 
-\section*{Expected Outcomes / Deliverables}
-The deliverables for our project will be broken down into two parts. 
-First, we expect to create implicit neural representation networks for at least one image and at least one physics-based PDE to reproduce the work outlined in~\cite{sitzmann2020implicit} using our own test data. These will consist of two networks each, one trained using ReLu or Tanh activation functions and one trained using Sine activation functions, with the remainder of the network architecture kept the same. Each result will be compared to the ground truth (either the original image or a solution generated using a traditional grid-based solver). The second outcome of the project will be more exploratory, as we plan to extend the methodology to an untested physics PDE. This will require defining a new loss function tailored to the chosen equation and generating synthetic data for evaluation. Again we will train one ReLu or Tanh-based network and one Sine-based network before visually comparing the results to the ground truth. In addition to these core deliverables, we will also explore potential improvements to the original SIREN implementation, such as optimizing training speed, numerical stability, or memory usage. 
+∼U(−
+fan
+in
+	​
 
+6
+	​
 
-\section*{Project Schedule}
+	​
 
-\begin{itemize}
-    \item \textbf{Week 8:} Create GitHub repository (A), implement basic SIREN network architecture and test on a sample image (B), generate or preprocess initial PDE datasets (C).
-    \item \textbf{Week 9:} Train and evaluate the simple model on one equation (A+B), analyze results and visualize reconstructions (C).
-    \item \textbf{Week 10:} Extend the model to additional equations or modified scenarios (A+B), generate new synthetic data and compare to baseline results (C).
-    \item \textbf{Finals Week:} Refine experiments, clean up code and documentation (A+B+C), prepare presentation slides and write the final 4-page report (A+B+C).
-\end{itemize}
+,
+fan
+in
+	​
 
-# Final_Project_Group2
+6
+	​
+
+	​
+
+),
+
+which ensures stable gradient propagation when using periodic activations.
+
+Training proceeds by sampling coordinates using Monte Carlo sampling at each iteration (pixel coordinates for images, and interior/boundary points for PDEs). This provides an unbiased approximation of the continuous loss function defined over the domain. Using automatic differentiation, one can also supervise derivatives of the network output, minimizing losses of the form
+
+𝐿
+=
+∥
+∇
+Φ
+(
+𝑥
+)
+−
+∇
+𝑓
+(
+𝑥
+)
+∥
+2
+.
+L=∥∇Φ(x)−∇f(x)∥
+2
+.
+
+For PDEs, SIREN is trained by minimizing PDE residuals at interior and boundary points (similar to Physics-Informed Neural Networks, or PINNs), with the key difference being the use of periodic activation functions.
+
+We will implement all of the above in PyTorch, leveraging tools such as autograd for computing higher-order derivatives. Once a minimal working architecture is established, we will apply it to an image-fitting task and a PDE problem, benchmarking SIREN against standard ReLU- and Tanh-based MLPs.
+
+Expected Outcomes / Deliverables
+
+The project deliverables are divided into two parts.
+
+First, we will construct implicit neural representation networks for at least one image-based task and one physics-based PDE, reproducing results from the original SIREN paper using our own test data. For each task, we will train two networks: one using ReLU or Tanh activations and one using sine activations, keeping all other architectural details identical. The results will be compared against ground truth data, either the original image or a solution obtained from a traditional grid-based numerical solver.
+
+Second, we will extend the SIREN methodology to a previously untested physics PDE. This will involve defining a new loss function tailored to the chosen equation and generating synthetic data for evaluation. As before, we will train both a standard activation network and a sine-activated network, and visually and quantitatively compare their results to the ground truth.
+
+In addition to these core goals, we will explore possible improvements to the original SIREN implementation, such as enhancements in training speed, numerical stability, or memory efficiency.
+
+Project Schedule
+
+Week 8:
+Create GitHub repository (A); implement basic SIREN architecture and test on a sample image (B); generate or preprocess initial PDE datasets (C).
+
+Week 9:
+Train and evaluate the model on one PDE (A+B); analyze results and visualize reconstructions (C).
+
+Week 10:
+Extend the model to additional equations or modified scenarios (A+B); generate new synthetic data and compare against baseline models (C).
+
+Finals Week:
+Refine experiments; clean up code and documentation (A+B+C); prepare presentation slides and write the final 4-page report (A+B+C).
+
+Final_Project_Group2
+
 Our goal is to reproduce the main results of the SIREN paper and extend them to other types of PDEs.
