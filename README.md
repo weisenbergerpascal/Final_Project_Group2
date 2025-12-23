@@ -1,3 +1,6 @@
+# Implicit Neural Representations with Periodic Activation Functions
+
+
 ## Background & Motivation
 
 Implicit Neural Representations (INRs) use neural networks to represent continuous physical fields by mapping coordinates directly to quantities like intensity or potential. The SIREN model introduced sinusoidal activation functions, enabling smooth and accurate modeling of both signals and their derivatives \[1\]. This makes SIRENs especially suitable for solving and analyzing physical systems governed by partial differential equations (PDEs).
